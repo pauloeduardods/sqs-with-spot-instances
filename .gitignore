@@ -35,3 +35,10 @@ override.tf.json
 terraform.rc
 
 ##########################################################################################
+
+# ignore build files
+*.o
+**/build
+
+# ignore zip files
+*.zip
