@@ -10,6 +10,12 @@ variable "region" {
   default     = "us-east-1"
 }
 
+variable "project_name" {
+  description = "Project name"
+  type        = string
+  default     = "dev-process-queue"
+}
+
 variable "ec2_ami" {
   description = "AWS EC2 AMI ID. Ex: ami-0f403e3180720dd7e, etc."
   type        = string
