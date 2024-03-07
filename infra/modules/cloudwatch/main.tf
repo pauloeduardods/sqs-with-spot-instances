@@ -1,17 +1,19 @@
-resource "aws_cloudwatch_metric_alarm" "sqs_queue_alarm" {
-  alarm_name          = "${var.project_name}_messages_alarm"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = 1
-  metric_name         = "ApproximateNumberOfMessagesVisible"
-  namespace           = "AWS/SQS"
-  period              = 60
-  statistic           = "Average"
-  threshold           = var.max_messages_threshold
+resource "aws_cloudwatch_event_rule" "lambda_timer" {
+  name                = "${var.project_name}_spot_instance_lambda_timer"
+  description         = "Trigger Lambda every 10 minutes"
+  schedule_expression = "rate(2 minutes)"
+}
 
-  dimensions = {
-    QueueName = "${var.project_name}.fifo"
-  }
+resource "aws_cloudwatch_event_target" "lambda" {
+  rule      = aws_cloudwatch_event_rule.lambda_timer.name
+  arn       = var.lambda_trigger.arn
+  # input     = "{}"
+}
 
-  alarm_description = "Alarm when there are ${var.max_messages_threshold} or more messages in the queue"
-  alarm_actions     = [ var.lambda_trigger_arn ]
+resource "aws_lambda_permission" "allow_event_bridge" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = var.lambda_trigger.name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.lambda_timer.arn
 }

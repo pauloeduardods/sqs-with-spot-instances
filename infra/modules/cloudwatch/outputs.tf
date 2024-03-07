@@ -1,3 +1,3 @@
-output "cloudwatch_sqs_queue_alarm_arn" {
-  value = aws_cloudwatch_metric_alarm.sqs_queue_alarm.arn
+output "cloudwatch_event_rule" {
+  value = aws_cloudwatch_event_rule.lambda_timer
 }

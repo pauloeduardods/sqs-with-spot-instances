@@ -3,13 +3,10 @@ variable "project_name" {
   type        = string
 }
 
-variable "max_messages_threshold" {
-  description = "Threshold for the alarm"
-  type        = number
-  default     = 10
-}
-
-variable "lambda_trigger_arn" {
-  description = "ARN of the lambda function"
-  type        = string
+variable "lambda_trigger" {
+  description = "Lambda function to trigger"
+  type        = object({
+    name = string
+    arn  = string
+  })
 }
