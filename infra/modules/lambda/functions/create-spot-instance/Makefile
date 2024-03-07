@@ -7,13 +7,23 @@ BUILD_DIR=./bin
 build: 
 	@echo "Compiling the code for create-spot-instance $(GOOS)/$(GOARCH)"
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go mod tidy
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -tags lambda.norpc -o $(BUILD_DIR)/create-spot-instance/bootstrap .
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -tags lambda.norpc -o $(BUILD_DIR)/bootstrap .
+# @echo "Stripping the binary"
+# cd $(BUILD_DIR) && strip bootstrap -o bootstrap_stripped
+# @echo "Binary stripped"
+	@echo "Compilation of create-spot-instance concluded"
+
+build-local:
+	@echo "Compiling the code for create-spot-instance"
+	go mod tidy
+	go build -o $(BUILD_DIR)/local .
+	strip $(BUILD_DIR)/local -o $(BUILD_DIR)/local_stripped
 	@echo "Compilation of create-spot-instance concluded"
 
 zip: clean build
 	@echo "Zipping Lambda functions"
 	@mkdir -p $(BUILD_DIR)
-	@zip -j $(BUILD_DIR)/create-spot-instance.zip $(BUILD_DIR)/create-spot-instance/bootstrap
+	@zip -j $(BUILD_DIR)/create-spot-instance.zip $(BUILD_DIR)/bootstrap
 	@echo "ZIP files created"
 
 clean:
