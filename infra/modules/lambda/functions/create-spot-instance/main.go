@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -11,14 +12,23 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 )
 
+const (
+	LOG_ERROR   = "Error"
+	LOG_INFO    = "Info"
+	LOG_WARNING = "Warning"
+
+	LOG_HANDLE_REQUEST = "HandleRequest"
+)
+
 func HandleRequest(ctx context.Context, event json.RawMessage) (string, error) {
-	fmt.Println("Evento recebido do CloudWatch:", string(event))
+	log.Printf("%s %s: Event received: %s\n", LOG_HANDLE_REQUEST, LOG_INFO, event)
 
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion("us-east-1"),
 	)
 	if err != nil {
-		return "", fmt.Errorf("erro ao carregar configuração da AWS: %v", err)
+		log.Printf("%s %s: Error loading AWS configuration: %v\n", LOG_HANDLE_REQUEST, LOG_ERROR, err)
+		return "", fmt.Errorf("%s %s: Error loading AWS configuration: %v", LOG_HANDLE_REQUEST, LOG_ERROR, err)
 	}
 
 	client := sqs.NewFromConfig(cfg)
@@ -32,16 +42,19 @@ func HandleRequest(ctx context.Context, event json.RawMessage) (string, error) {
 		},
 	})
 	if err != nil {
-		return "", fmt.Errorf("erro ao obter atributos da fila: %v", err)
+		log.Printf("%s %s: Error getting queue attributes: %v\n", LOG_HANDLE_REQUEST, LOG_ERROR, err)
+		return "", fmt.Errorf("%s %s: Error getting queue attributes: %v", LOG_HANDLE_REQUEST, LOG_ERROR, err)
 	}
 
 	numMessages, ok := result.Attributes["ApproximateNumberOfMessages"]
 	if !ok {
-		return "", fmt.Errorf("não foi possível encontrar o número aproximado de mensagens")
+		log.Printf("%s %s: Error getting queue attributes: ApproximateNumberOfMessages not found\n", LOG_HANDLE_REQUEST, LOG_ERROR)
+		return "", fmt.Errorf("%s %s: Error getting queue attributes: ApproximateNumberOfMessages not found", LOG_HANDLE_REQUEST, LOG_ERROR)
 	}
-	fmt.Printf("Número aproximado de mensagens na fila: %s\n", numMessages)
 
-	return fmt.Sprintf("Evento processado com sucesso. Número aproximado de mensagens na fila: %s", numMessages), nil
+	log.Printf("%s %s: Event processed successfully. Approximate number of messages in the queue: %s\n", LOG_HANDLE_REQUEST, LOG_INFO, numMessages)
+
+	return fmt.Sprintf("Approximate number of messages in the queue: %s", numMessages), nil
 }
 
 func main() {

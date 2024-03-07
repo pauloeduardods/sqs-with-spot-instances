@@ -39,6 +39,7 @@ terraform.rc
 # ignore build files
 *.o
 **/build
+**/bin
 
 # ignore zip files
 *.zip

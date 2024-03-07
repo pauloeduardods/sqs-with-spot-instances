@@ -48,9 +48,9 @@ resource "aws_lambda_function" "create_spot_instance_lambda" {
   runtime       = "provided.al2"
   role          = aws_iam_role.iam_for_lambda_create_spot_instance.arn
 
-  filename         = "./modules/lambda/build/create-spot-instance.zip"
+  filename         = "./modules/lambda/functions/create-spot-instance/bin/create-spot-instance.zip"
 
-  source_code_hash = filebase64sha256("./modules/lambda/build/create-spot-instance.zip")
+  source_code_hash = filebase64sha256("./modules/lambda/functions/create-spot-instance/bin/create-spot-instance.zip")
 
   environment {
     variables = {
