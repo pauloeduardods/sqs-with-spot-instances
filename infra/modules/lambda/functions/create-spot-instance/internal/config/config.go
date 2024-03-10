@@ -14,18 +14,26 @@ import (
 var logger = Logger.NewLogger()
 
 type Environment struct {
-	Region string
+	Region      string
+	SqsQueueUrl string
 }
 
 func NewEnvironment() *Environment {
 	region := os.Getenv("AWS_REGION")
 	if region == "" {
 		logger.Error("AWS_REGION environment variable not set")
-		return nil
+		panic("AWS_REGION environment variable not set")
+	}
+
+	sqsQueueUrl := os.Getenv("SQS_QUEUE_URL")
+	if sqsQueueUrl == "" {
+		logger.Error("SQS_QUEUE_URL environment variable not set")
+		panic("SQS_QUEUE_URL environment variable not set")
 	}
 
 	return &Environment{
-		Region: region,
+		Region:      region,
+		SqsQueueUrl: sqsQueueUrl,
 	}
 }
 

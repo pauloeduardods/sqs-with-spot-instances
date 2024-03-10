@@ -14,8 +14,27 @@ import (
 
 var logger = Logger.NewLogger()
 
+const (
+	COMMON_TAG_KEY   = "SPOT_INSTANCE_COMMON_TAG"
+	COMMON_TAG_VALUE = "spot-instance-created-by-lambda"
+)
+
 type EC2Service struct {
 	client *ec2.Client
+	config EC2Config
+}
+
+type EC2Config struct {
+	MaxSpotInstancePrice float64
+	InstanceType         string
+	ImageId              string
+	MaxInstances         int
+	// KeyName              string
+	// SecurityGroupIds     []string
+	// SubnetId             string
+	// InstanceProfileArn   string
+	// RoleArn              string
+	// SpotInstanceTag string
 }
 
 func NewEC2Service() (*EC2Service, error) {
@@ -27,6 +46,18 @@ func NewEC2Service() (*EC2Service, error) {
 
 	return &EC2Service{
 		client: awsConfig.EC2Client,
+		config: EC2Config{
+			MaxSpotInstancePrice: 0.01,
+			InstanceType:         "t2.micro",
+			ImageId:              "ami-0f403e3180720dd7e",
+			// KeyName:              "your-key-pair-name",
+			// SecurityGroupIds:     []string{"your-security-group-id"},
+			// SubnetId:             "your-subnet-id",
+			// InstanceProfileArn:   "your-instance-profile-arn",
+			// RoleArn:              "your-role-arn",
+			// SpotInstanceTag: "spot-instance-created-by-lambda",
+			MaxInstances: 1,
+		},
 	}, nil
 }
 
@@ -37,17 +68,17 @@ type Instance struct {
 }
 
 type CheckForExistingSpotInstanceRequestOut struct {
-	active    int
-	open      int
-	instances []Instance
+	Active    int
+	Open      int
+	Instances []Instance
 }
 
 func (s *EC2Service) CheckForExistingSpotInstanceRequest() (CheckForExistingSpotInstanceRequestOut, error) {
 	input := &ec2.DescribeSpotInstanceRequestsInput{
 		Filters: []types.Filter{
 			{
-				Name:   aws.String("tag:SPOT_INSTANCE_COMMON_TAG"),
-				Values: []string{"spot-instance-created-by-lambda"},
+				Name:   aws.String("tag:" + COMMON_TAG_KEY),
+				Values: []string{COMMON_TAG_VALUE},
 			},
 			{
 				Name: aws.String("state"),
@@ -66,8 +97,9 @@ func (s *EC2Service) CheckForExistingSpotInstanceRequest() (CheckForExistingSpot
 	}
 
 	out := CheckForExistingSpotInstanceRequestOut{
-		active: 0,
-		open:   0,
+		Active:    0,
+		Open:      0,
+		Instances: []Instance{},
 	}
 
 	for _, request := range result.SpotInstanceRequests {
@@ -76,11 +108,11 @@ func (s *EC2Service) CheckForExistingSpotInstanceRequest() (CheckForExistingSpot
 			InstanceId:            request.InstanceId,
 			State:                 string(request.State),
 		}
-		out.instances = append(out.instances, instance)
+		out.Instances = append(out.Instances, instance)
 		if request.State == types.SpotInstanceStateOpen {
-			out.open++
+			out.Open++
 		} else if request.State == types.SpotInstanceStateActive {
-			out.active++
+			out.Active++
 		}
 	}
 
@@ -89,63 +121,49 @@ func (s *EC2Service) CheckForExistingSpotInstanceRequest() (CheckForExistingSpot
 	return out, nil
 }
 
-func (s *EC2Service) CheckForExistingSpotInstance() ([]Instance, error) { //Not working, instance dont have tag
-	input := &ec2.DescribeInstancesInput{
-		Filters: []types.Filter{
-			{
-				Name:   aws.String("instance-lifecycle"),
-				Values: []string{"spot"},
-			},
-			{
-				Name:   aws.String("instance-state-name"),
-				Values: []string{"running"},
-			},
-			{
-				Name:   aws.String("tag:SPOT_INSTANCE_COMMON_TAG"),
-				Values: []string{"spot-instance-created-by-lambda"},
-			},
-		},
-	}
-
-	result, err := s.client.DescribeInstances(context.Background(), input)
-	if err != nil {
-		logger.Error("Error describing EC2 instances: %v", err)
-		return nil, fmt.Errorf("error describing EC2 instances: %v", err)
-	}
-
-	// logger.Info("Result: %v", result)
-
-	instanceList := []Instance{}
-	logger.Info("Reservations: %v", result.Reservations)
-	for _, reservation := range result.Reservations {
-		if len(reservation.Instances) > 0 {
-			for _, instance := range reservation.Instances {
-				instanceList = append(instanceList, Instance{
-					SpotInstanceRequestId: *instance.SpotInstanceRequestId,
-					InstanceId:            instance.InstanceId,
-					State:                 string(instance.State.Name),
-				})
-			}
-		}
-	}
-
-	return instanceList, nil
+type CreateSpotInstanceInput struct {
+	Count int
+	Price float64
 }
 
-func (s *EC2Service) CreateSpotInstance() error {
+func (s *EC2Service) CreateSpotInstance(params CreateSpotInstanceInput) error {
+	if params.Count > s.config.MaxInstances {
+		logger.Error("Error creating spot instance: count exceeds maximum instances")
+		return fmt.Errorf("error creating spot instance: count exceeds maximum instances")
+	}
+	if params.Price > s.config.MaxSpotInstancePrice {
+		logger.Error("Error creating spot instance: price exceeds maximum spot instance price")
+		return fmt.Errorf("error creating spot instance: price exceeds maximum spot instance price")
+	}
+
 	input := &ec2.RequestSpotInstancesInput{
-		InstanceCount: aws.Int32(1),
 		Type:          types.SpotInstanceTypeOneTime,
-		SpotPrice:     aws.String("0.01"),
+		InstanceCount: aws.Int32(int32(params.Count)),
+		SpotPrice:     aws.String(fmt.Sprintf("%f", params.Price)),
 		LaunchSpecification: &types.RequestSpotLaunchSpecification{
-			ImageId:      aws.String("ami-0f403e3180720dd7e"), // Substitua pelo AMI desejado
-			InstanceType: types.InstanceTypeT2Micro,           // Substitua pelo tipo de instância desejado
-			// KeyName:      aws.String("your-key-pair-name"),    // Substitua pelo seu par de chaves
+			ImageId:      aws.String(s.config.ImageId),
+			InstanceType: types.InstanceType(s.config.InstanceType),
+			// KeyName:      aws.String(s.config.KeyName),
+			// SecurityGroupIds:     s.config.SecurityGroupIds,
+			// SubnetId:             aws.String(s.config.SubnetId),
+			// IamInstanceProfile:   &types.IamInstanceProfileSpecification{Arn: aws.String(s.config.InstanceProfileArn)},
+			// Monitoring:           &types.RunInstancesMonitoringEnabled{Enabled: true},
+			// TagSpecifications: []types.TagSpecification{
+			// 	{
+			// 		ResourceType: types.ResourceTypeInstance,
+			// 		Tags: []types.Tag{
+			// 			{
+			// 				Key:   aws.String("SPOT_INSTANCE_COMMON_TAG"),
+			// 				Value: aws.String(s.config.SpotInstanceTag),
+			// 			},
+			// 		},
+			// 	},
+			// },
 		},
 		ValidUntil: aws.Time(time.Now().Add(1 * time.Hour)),
 	}
 
-	result, err := s.client.RequestSpotInstances(context.Background(), input) //Mudar isso aqui
+	result, err := s.client.RequestSpotInstances(context.Background(), input)
 	if err != nil {
 		logger.Error("Error creating spot instance: %v", err)
 		return fmt.Errorf("error creating spot instance: %v", err)
@@ -157,8 +175,8 @@ func (s *EC2Service) CreateSpotInstance() error {
 			Resources: []string{*instance.SpotInstanceRequestId},
 			Tags: []types.Tag{
 				{
-					Key:   aws.String("SPOT_INSTANCE_COMMON_TAG"),
-					Value: aws.String("spot-instance-created-by-lambda"),
+					Key:   aws.String(COMMON_TAG_KEY),
+					Value: aws.String(COMMON_TAG_VALUE),
 				},
 			},
 		}
@@ -172,3 +190,5 @@ func (s *EC2Service) CreateSpotInstance() error {
 	logger.Info("Spot instance created successfully")
 	return nil
 }
+
+// func (s *EC2Service) Delete

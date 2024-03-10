@@ -31,6 +31,6 @@ func (l *Logger) logWithCallerInfo(level, format string, v ...interface{}) {
 		line = 0
 	}
 	formattedMessage := fmt.Sprintf(format, v...)
-	logMsg := fmt.Sprintf("%s %s:%d: %s\n", level, file, line, formattedMessage)
+	logMsg := fmt.Sprintf("%s:%d: %s - %s\n", file, line, level, formattedMessage)
 	log.Printf(logMsg)
 }
