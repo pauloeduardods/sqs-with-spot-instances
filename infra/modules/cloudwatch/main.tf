@@ -1,19 +1,31 @@
-resource "aws_cloudwatch_event_rule" "lambda_timer" {
-  name                = "${var.project_name}_spot_instance_lambda_timer"
-  description         = "Trigger Lambda every 10 minutes"
-  schedule_expression = "rate(2 minutes)"
+resource "aws_cloudwatch_metric_alarm" "scale_out_alarm" {
+  alarm_name          = "${var.project_name}-scale-out-alarm"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  namespace           = "AWS/SQS"
+  period              = "30" # increase
+  statistic           = "Average"
+  threshold           = "5"
+  alarm_description   = "Scale out when there are more than 5 messages in the queue"
+  dimensions = {
+    QueueName = var.sqs_queue_name
+  }
+  alarm_actions = [var.scale.scale_out_arn]
 }
 
-resource "aws_cloudwatch_event_target" "lambda" {
-  rule      = aws_cloudwatch_event_rule.lambda_timer.name
-  arn       = var.lambda_trigger.arn
-  # input     = "{}"
-}
-
-resource "aws_lambda_permission" "allow_event_bridge" {
-  statement_id  = "AllowExecutionFromEventBridge"
-  action        = "lambda:InvokeFunction"
-  function_name = var.lambda_trigger.name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.lambda_timer.arn
+resource "aws_cloudwatch_metric_alarm" "scale_in_alarm" {
+  alarm_name          = "${var.project_name}-scale-in-alarm"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  namespace           = "AWS/SQS"
+  period              = "30" #increase 
+  statistic           = "Average"
+  threshold           = "3"
+  alarm_description   = "Scale in when there are less than 3 messages in the queue"
+  dimensions = {
+    QueueName = var.sqs_queue_name
+  }
+  alarm_actions = [var.scale.scale_in_arn]
 }
