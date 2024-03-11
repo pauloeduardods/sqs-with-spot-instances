@@ -23,10 +23,22 @@ module "cloudwatch" {
   }
 }
 
+module "ec2" {
+  source      = "./modules/ec2"
+
+  project_name = var.project_name
+  # sqs_queue_name = module.sqs_queue.sqs_queue_name
+  # scale = {
+  #   scale_out_arn = module.lambda.lambda_scale_out_arn
+  #   scale_in_arn  = module.lambda.lambda_scale_in_arn
+  # }
+}
+
 module "auto_scaling_group" {
   source      = "./modules/asg"
 
   project_name = var.project_name
+  process_queue_launch_configuration = module.ec2.process_queue_launch_configuration
   # sqs_queue_name = module.sqs_queue.sqs_queue_name
   # scale = {
   #   scale_out_arn = module.lambda.lambda_scale_out_arn
