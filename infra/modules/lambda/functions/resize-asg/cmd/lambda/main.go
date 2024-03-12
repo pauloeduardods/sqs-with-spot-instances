@@ -13,7 +13,7 @@ import (
 var logger = Logger.NewLogger()
 
 func HandleRequest(ctx context.Context, event json.RawMessage) (string, error) {
-	logger.Info("Event received: %v", event)
+	logger.Info("Received event: %s", event)
 	conf, err := config.NewAWSConfig(ctx)
 	if err != nil {
 		logger.Error("Error creating AWS config: %v", err)

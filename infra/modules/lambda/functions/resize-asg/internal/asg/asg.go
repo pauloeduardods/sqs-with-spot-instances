@@ -25,10 +25,14 @@ func NewASG(asgName string, config *config.AWSConfig) (*ASG, error) {
 }
 
 func (m *ASG) SetDesiredCapacity(desiredCapacity int32) error {
+	var honorCooldown bool = true
+	if desiredCapacity <= 0 {
+		honorCooldown = false
+	}
 	input := &autoscaling.SetDesiredCapacityInput{
 		AutoScalingGroupName: &m.ASGName,
 		DesiredCapacity:      &desiredCapacity,
-		HonorCooldown:        aws.Bool(true),
+		HonorCooldown:        aws.Bool(honorCooldown), // attention! Only set to false if desiredCapacity <= 0
 	}
 
 	_, err := m.client.SetDesiredCapacity(context.TODO(), input)

@@ -1,7 +1,7 @@
-output "auto_scaling_policy" {
-  description = "Auto Scaling Policy"
+output "auto_scaling_group" {
+  description = "Auto Scaling Group"
   value       = {
-    scale_out_arn = aws_autoscaling_policy.scale_out.arn
-    scale_in_arn  = aws_autoscaling_policy.scale_in.arn
+    name = aws_autoscaling_group.process_queue_asg.name
+    arn  = aws_autoscaling_group.process_queue_asg.arn
   }
 }

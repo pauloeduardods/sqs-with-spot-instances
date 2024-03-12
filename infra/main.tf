@@ -15,11 +15,20 @@ module "cloudwatch" {
   source      = "./modules/cloudwatch"
 
   project_name = var.project_name
-  # lambda_trigger = module.lambda.lambda_create_spot_instance
-  sqs_queue_name = module.sqs_queue.sqs_queue.name
-  scale = {
-    scale_out_arn = module.auto_scaling_group.auto_scaling_policy.scale_out_arn
-    scale_in_arn = module.auto_scaling_group.auto_scaling_policy.scale_in_arn
+  lambda_resize_asg = module.lambda_resize_asg.lambda_function
+}
+
+module "lambda_resize_asg" {
+  source      = "./modules/lambda/functions/resize-asg"
+
+  project_name = var.project_name
+  region       = var.region
+  sqs          = module.sqs_queue.sqs_queue
+  asg          = module.auto_scaling_group.auto_scaling_group
+  config = {
+    min_instances = 0
+    max_instances = 10
+    message_threshold = 10
   }
 }
 
@@ -27,11 +36,6 @@ module "ec2" {
   source      = "./modules/ec2"
 
   project_name = var.project_name
-  # sqs_queue_name = module.sqs_queue.sqs_queue_name
-  # scale = {
-  #   scale_out_arn = module.lambda.lambda_scale_out_arn
-  #   scale_in_arn  = module.lambda.lambda_scale_in_arn
-  # }
 }
 
 module "auto_scaling_group" {
@@ -39,16 +43,4 @@ module "auto_scaling_group" {
 
   project_name = var.project_name
   process_queue_launch_configuration = module.ec2.process_queue_launch_configuration
-  # sqs_queue_name = module.sqs_queue.sqs_queue_name
-  # scale = {
-  #   scale_out_arn = module.lambda.lambda_scale_out_arn
-  #   scale_in_arn  = module.lambda.lambda_scale_in_arn
-  # }
-  
 }
-
-# module "lambda" {
-#   source      = "./modules/lambda/functions/create-spot-instance"
-
-#   project_name = var.project_name
-# }

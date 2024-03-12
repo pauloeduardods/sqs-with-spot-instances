@@ -1,7 +1,7 @@
-output "lambda_resize_asg" {
+output "lambda_function" {
   description = "Lambda function to resize ASG"
   value       = {
-    name = aws_lambda_function.lambda_resize_asg.function_name
-    arn  = aws_lambda_function.lambda_resize_asg.arn
+    name = aws_lambda_function.lambda_function.function_name
+    arn  = aws_lambda_function.lambda_function.arn
   }
 }

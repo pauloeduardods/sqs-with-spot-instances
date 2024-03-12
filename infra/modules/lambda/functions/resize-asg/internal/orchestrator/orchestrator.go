@@ -62,15 +62,18 @@ func max(a, b int) int {
 }
 
 func (o *Orchestrator) Orchestrate() error {
+	logger.Info("Orchestrating")
 	totalMessages, err := o.sqsClient.GetTotalQueueMessages()
+	logger.Info("Total messages in queue: %d", totalMessages)
 	if err != nil {
 		logger.Error("Error getting total queue messages: %v", err)
 		return fmt.Errorf("error getting total queue messages: %w", err)
 	}
 
 	desiredInstances := o.calculateDesiredInstances(totalMessages)
-
 	currentCapacity, err := o.asgClient.GetDesiredCapacity()
+
+	logger.Info("Desired instances: %d, Current capacity: %d", desiredInstances, currentCapacity)
 	if err != nil {
 		logger.Error("Error getting current desired capacity: %v", err)
 		return fmt.Errorf("error getting current desired capacity: %w", err)

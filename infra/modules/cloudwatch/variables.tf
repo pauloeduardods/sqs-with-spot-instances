@@ -5,8 +5,8 @@ variable "project_name" {
 
 variable "lambda_resize_asg" {
   description = "Lambda function to resize ASG"
-  type        = {
-    arn = string
+  type        = object({
     name = string
-  }
+    arn  = string
+  })
 }

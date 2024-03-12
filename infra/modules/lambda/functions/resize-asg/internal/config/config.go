@@ -24,10 +24,10 @@ type Environment struct {
 }
 
 func NewEnvironment() *Environment {
-	region := os.Getenv("AWS_REGION")
+	region := os.Getenv("REGION")
 	if region == "" {
-		logger.Error("AWS_REGION environment variable not set")
-		panic("AWS_REGION environment variable not set")
+		logger.Error("REGION environment variable not set")
+		panic("REGION environment variable not set")
 	}
 
 	sqsQueueUrl := os.Getenv("SQS_QUEUE_URL")
