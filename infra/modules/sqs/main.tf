@@ -9,7 +9,7 @@ resource "aws_sqs_queue" "sqs_queue" {
   name                       = "${var.project_name}.fifo"
   fifo_queue                 = true
   visibility_timeout_seconds = 90
-  message_retention_seconds  = 172800
+  message_retention_seconds  = 864000
   receive_wait_time_seconds  = 20
   content_based_deduplication = false
   redrive_policy = jsonencode({
