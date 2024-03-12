@@ -1,31 +1,19 @@
-resource "aws_cloudwatch_metric_alarm" "scale_out_alarm" {
-  alarm_name          = "${var.project_name}-scale-out-alarm"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "ApproximateNumberOfMessagesVisible"
-  namespace           = "AWS/SQS"
-  period              = "30" # increase
-  statistic           = "Average"
-  threshold           = "5"
-  alarm_description   = "Scale out when there are more than 5 messages in the queue"
-  dimensions = {
-    QueueName = var.sqs_queue_name
-  }
-  alarm_actions = [var.scale.scale_out_arn]
+resource "aws_cloudwatch_event_rule" "lambda_resize_asg_rule" {
+  name                = "${var.project_name}-lambda-resize-asg"
+  description         = "Rule to call lambda to resize ASG"
+  schedule_expression = "rate(5 minutes)"
 }
 
-resource "aws_cloudwatch_metric_alarm" "scale_in_alarm" {
-  alarm_name          = "${var.project_name}-scale-in-alarm"
-  comparison_operator = "LessThanThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "ApproximateNumberOfMessagesVisible"
-  namespace           = "AWS/SQS"
-  period              = "30" #increase 
-  statistic           = "Average"
-  threshold           = "3"
-  alarm_description   = "Scale in when there are less than 3 messages in the queue"
-  dimensions = {
-    QueueName = var.sqs_queue_name
-  }
-  alarm_actions = [var.scale.scale_in_arn]
+resource "aws_cloudwatch_event_target" "lambda_resize_asg_target" {
+  rule      = aws_cloudwatch_event_rule.lambda_resize_asg_rule.name
+  target_id = "CallLambdaResizeASG"
+  arn       = var.lambda_resize_asg.arn
+}
+
+resource "aws_lambda_permission" "allow_cloudwatch_to_call_lambda" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = var.lambda_resize_asg.name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.lambda_resize_asg_rule.arn 
 }

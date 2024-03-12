@@ -2,12 +2,11 @@ package config
 
 import (
 	"context"
-	"create-spot-instance/utils/Logger"
 	"fmt"
 	"os"
+	"resize-asg/pkg/Logger"
 
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 )
 
@@ -38,7 +37,6 @@ func NewEnvironment() *Environment {
 }
 
 type AWSConfig struct {
-	EC2Client *ec2.Client
 	SQSClient *sqs.Client
 	Region    string
 }
@@ -56,7 +54,6 @@ func NewAWSConfig() (*AWSConfig, error) {
 	}
 
 	return &AWSConfig{
-		EC2Client: ec2.NewFromConfig(cfg),
 		SQSClient: sqs.NewFromConfig(cfg),
 		Region:    cfg.Region,
 	}, nil

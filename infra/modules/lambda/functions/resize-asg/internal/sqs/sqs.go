@@ -2,9 +2,9 @@ package sqs
 
 import (
 	"context"
-	"create-spot-instance/internal/config"
-	"create-spot-instance/utils/Logger"
 	"fmt"
+	"resize-asg/internal/config"
+	"resize-asg/pkg/Logger"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
