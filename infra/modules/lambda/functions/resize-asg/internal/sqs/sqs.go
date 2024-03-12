@@ -18,26 +18,21 @@ type SQS struct {
 	queueUrl string
 }
 
-type ISQS interface {
-}
-
-func NewSQS(queueUrl string) (*SQS, error) {
-	awsConfig, err := config.NewAWSConfig()
-	if err != nil {
-		return nil, fmt.Errorf("Error creating AWS config: %v", err)
-	}
+func NewSQS(queueUrl string, config *config.AWSConfig) (*SQS, error) {
 
 	return &SQS{
-		client:   awsConfig.SQSClient,
+		client:   config.SQSClient,
 		queueUrl: queueUrl,
 	}, nil
 }
 
-func (s *SQS) GetQueueApproximateNumberOfMessages() (int, error) {
+func (s *SQS) GetTotalQueueMessages() (int, error) {
 	result, err := s.client.GetQueueAttributes(context.TODO(), &sqs.GetQueueAttributesInput{
 		QueueUrl: &s.queueUrl,
 		AttributeNames: []types.QueueAttributeName{
-			"ApproximateNumberOfMessages",
+			types.QueueAttributeNameApproximateNumberOfMessages,
+			types.QueueAttributeNameApproximateNumberOfMessagesNotVisible,
+			types.QueueAttributeNameApproximateNumberOfMessagesDelayed,
 		},
 	})
 	if err != nil {
@@ -45,17 +40,27 @@ func (s *SQS) GetQueueApproximateNumberOfMessages() (int, error) {
 		return 0, fmt.Errorf("Error getting queue attributes: %v", err)
 	}
 
-	numMessages, ok := result.Attributes["ApproximateNumberOfMessages"]
-	if !ok {
-		logger.Error("Error getting queue attributes: ApproximateNumberOfMessages not found")
-		return 0, fmt.Errorf("Error getting queue attributes: ApproximateNumberOfMessages not found")
+	totalMessages := 0
+
+	for _, attributeName := range []string{
+		"ApproximateNumberOfMessages",
+		"ApproximateNumberOfMessagesNotVisible",
+		"ApproximateNumberOfMessagesDelayed",
+	} {
+		numMessages, ok := result.Attributes[attributeName]
+		if !ok {
+			logger.Error("Attribute %s not found", attributeName)
+			continue
+		}
+
+		numMessagesInt, err := strconv.Atoi(numMessages)
+		if err != nil {
+			logger.Error("Error converting number of messages to int for %s: %v", attributeName, err)
+			continue
+		}
+
+		totalMessages += numMessagesInt
 	}
 
-	numMessagesInt, err := strconv.Atoi(numMessages)
-	if err != nil {
-		logger.Error("Error converting number of messages to int: %v", err)
-		return 0, fmt.Errorf("Error converting number of messages to int: %v", err)
-	}
-
-	return numMessagesInt, nil
+	return totalMessages, nil
 }
