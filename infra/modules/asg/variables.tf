@@ -10,3 +10,11 @@ variable "process_queue_launch_configuration" {
     id   = string
   })
 }
+
+variable "asg_config" {
+  description = "Auto Scaling Group configuration"
+  type        = object({
+    min_size         = number
+    max_size         = number
+  })
+}

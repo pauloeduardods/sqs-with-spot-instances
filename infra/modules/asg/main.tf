@@ -12,14 +12,14 @@ data "aws_subnets" "selected" {
 resource "aws_autoscaling_group" "process_queue_asg" {
   name = "${var.project_name}-spot-instance-asg"
   launch_configuration = var.process_queue_launch_configuration.id
-  min_size             = 0
-  max_size             = 10
+  min_size             = var.asg_config.min_size
+  max_size             = var.asg_config.max_size
 
   vpc_zone_identifier = data.aws_subnets.selected.ids
 
   tag {
     key                 = "Name"
-    value               = "SpotInstanceQueue"
+    value               = "SpotInstanceQueue-${var.project_name}"
     propagate_at_launch = true
   }
 }
