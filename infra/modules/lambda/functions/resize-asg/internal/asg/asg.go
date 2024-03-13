@@ -2,12 +2,14 @@ package asg
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"resize-asg/internal/config"
 	"resize-asg/pkg/Logger"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	"github.com/aws/smithy-go"
 )
 
 var logger = Logger.NewLogger()
@@ -37,8 +39,14 @@ func (m *ASG) SetDesiredCapacity(desiredCapacity int32) error {
 
 	_, err := m.client.SetDesiredCapacity(context.TODO(), input)
 	if err != nil {
-		logger.Error("Error setting desired capacity: %v", err)
-		return fmt.Errorf("error setting desired capacity for ASG %s: %w", m.ASGName, err)
+		var ae smithy.APIError
+		if errors.As(err, &ae) && ae.ErrorCode() == "ScalingActivityInProgress" {
+			logger.Error("Scaling activity in progress for ASG %s; request to change desired capacity to %d will not be retried.", m.ASGName, desiredCapacity)
+			return fmt.Errorf("scaling activity in progress for ASG %s; request to change desired capacity to %d will not be retried", m.ASGName, desiredCapacity)
+		} else {
+			logger.Error("Error setting desired capacity: %v", err)
+			return fmt.Errorf("error setting desired capacity for ASG %s: %w", m.ASGName, err)
+		}
 	}
 
 	logger.Info("Successfully set desired capacity for ASG %s to %d", m.ASGName, desiredCapacity)
