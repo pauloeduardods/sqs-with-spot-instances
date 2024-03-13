@@ -10,7 +10,7 @@ data "aws_subnets" "selected" {
 }
 
 resource "aws_autoscaling_group" "process_queue_asg" {
-  name = "${var.project_name}-spot-instance-asg"
+  name = "${var.project_name}_spot_instance_asg"
   launch_configuration = var.process_queue_launch_configuration.id
   min_size             = var.asg_config.min_size
   max_size             = var.asg_config.max_size
@@ -19,23 +19,7 @@ resource "aws_autoscaling_group" "process_queue_asg" {
 
   tag {
     key                 = "Name"
-    value               = "SpotInstanceQueue-${var.project_name}"
+    value               = "SpotInstanceQueue_${var.project_name}"
     propagate_at_launch = true
   }
 }
-
-# resource "aws_autoscaling_policy" "scale_out" {
-#   name                   = "${var.project_name}-scale-out"
-#   scaling_adjustment     = 1
-#   adjustment_type        = "ChangeInCapacity"
-#   cooldown               = 300
-#   autoscaling_group_name = aws_autoscaling_group.process_queue_asg.name
-# }
-
-# resource "aws_autoscaling_policy" "scale_in" {
-#   name                   = "${var.project_name}-scale-in"
-#   scaling_adjustment     = -1
-#   adjustment_type        = "ChangeInCapacity"
-#   cooldown               = 300
-#   autoscaling_group_name = aws_autoscaling_group.process_queue_asg.name
-# }

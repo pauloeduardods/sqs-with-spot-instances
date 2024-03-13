@@ -1,5 +1,5 @@
 resource "aws_sqs_queue" "sqs_queue_dlq" {
-  name                       = "${var.project_name}-dlq.fifo"
+  name                       = "${var.project_name}aws_sqs_queue_policydlq.fifo"
   fifo_queue                 = true
   visibility_timeout_seconds = 30
   content_based_deduplication = false

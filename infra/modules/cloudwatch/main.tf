@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_event_rule" "lambda_resize_asg_rule" {
-  name                = "${var.project_name}-lambda-resize-asg"
+  name                = "${var.project_name}_lambda_resize_asg"
   description         = "Rule to call lambda to resize ASG"
   schedule_expression = "rate(5 minutes)"
 }
