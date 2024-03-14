@@ -29,10 +29,6 @@ variable "config_ec2" {
   type = object({
     instance_type = string
     spot_price    = number
-    ami_id        = string
+    ami_id      = string
   })
-  default = {
-    spot_price    = 0.005
-    instance_type = "t2.micro"
-  }
 }

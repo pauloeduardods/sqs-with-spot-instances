@@ -3,6 +3,10 @@ variable "project_name" {
   type        = string
 }
 
+variable "region" {
+  description = "The AWS region"
+  type        = string
+}
 variable "ec2_config" {
   description = "EC2 instance configuration"
   type        = object({
@@ -10,6 +14,21 @@ variable "ec2_config" {
     spot_price    = number
     ami_id        = string
   })
+}
+
+variable "ecr_repo" {
+  description = "The ECR repository"
+  type        = object({
+    repository_url = string
+  })
+}
+
+variable "sqs_queue" {
+  description = "The SQS queue"
+  type        = object({
+    arn = string
+  })
+  
 }
 
 # variable "ami_id" {

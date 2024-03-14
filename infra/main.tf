@@ -25,6 +25,12 @@ module "lambda_resize_asg" {
   }
 }
 
+module "ecr" {
+  source      = "./modules/ecr"
+
+  project_name = var.project_name
+}
+
 module "ec2" {
   source      = "./modules/ec2"
 
@@ -34,6 +40,9 @@ module "ec2" {
     spot_price    = var.config_ec2.spot_price
     ami_id = var.config_ec2.ami_id
   }
+  ecr_repo = module.ecr.ecr_repo
+  region = var.region
+  sqs_queue = module.sqs_queue.sqs_queue
 }
 
 module "auto_scaling_group" {
