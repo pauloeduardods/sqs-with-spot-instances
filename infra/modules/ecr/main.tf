@@ -1,4 +1,4 @@
-resource "aws_ecr_repository" "my_ecr_repo" {
+resource "aws_ecr_repository" "ecr_repo" {
   name                 = "${var.project_name}-ecr-repo"
   image_tag_mutability = "MUTABLE"
 
@@ -12,9 +12,10 @@ resource "aws_ecr_repository" "my_ecr_repo" {
 
   tags = {
     Name        = "SpotInstanceQueue_${var.project_name}"
+    CreatedBy   = "Terraform"
   }
 }
 
 output "ecr_repository_url" {
-  value = aws_ecr_repository.my_ecr_repo.repository_url
+  value = aws_ecr_repository.ecr_repo.repository_url
 }

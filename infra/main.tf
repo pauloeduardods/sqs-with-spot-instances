@@ -32,6 +32,7 @@ module "ec2" {
   ec2_config = {
     instance_type = var.config_ec2.instance_type
     spot_price    = var.config_ec2.spot_price
+    ami_id = var.config_ec2.ami_id
   }
 }
 

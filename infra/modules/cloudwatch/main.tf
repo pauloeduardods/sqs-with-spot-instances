@@ -3,7 +3,8 @@ resource "aws_cloudwatch_event_rule" "lambda_resize_asg_rule" {
   description         = "Rule to call lambda to resize ASG"
   schedule_expression = "rate(5 minutes)"
   tags = {
-    "Name" = "SpotInstanceQueue_${var.project_name}"
+    Name = "SpotInstanceQueue_${var.project_name}"
+    CreatedBy = "Terraform"
   }
 }
 

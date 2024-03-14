@@ -84,5 +84,6 @@ resource "aws_lambda_function" "lambda_function" {
 
   tags = {
     Name = "SpotInstanceQueue_${var.project_name}"
+    CreatedBy = "Terraform"
   }
 }

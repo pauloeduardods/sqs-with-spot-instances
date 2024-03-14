@@ -18,6 +18,7 @@ resource "aws_sqs_queue" "sqs_queue" {
   })
   tags = {
     Name = "SpotInstanceQueue_${var.project_name}"
+    CreatedBy = "Terraform"
   }
 }
 
