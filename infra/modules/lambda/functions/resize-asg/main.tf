@@ -81,4 +81,8 @@ resource "aws_lambda_function" "lambda_function" {
       MESSAGE_THRESHOLD = var.config.message_threshold,
     }
   }
+
+  tags = {
+    Name = "SpotInstanceQueue_${var.project_name}"
+  }
 }

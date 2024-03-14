@@ -16,6 +16,9 @@ resource "aws_sqs_queue" "sqs_queue" {
     deadLetterTargetArn = aws_sqs_queue.sqs_queue_dlq.arn
     maxReceiveCount     = 2
   })
+  tags = {
+    Name = "SpotInstanceQueue_${var.project_name}"
+  }
 }
 
 resource "aws_sqs_queue_policy" "sqs_policy" {
