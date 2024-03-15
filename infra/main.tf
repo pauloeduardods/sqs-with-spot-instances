@@ -31,6 +31,18 @@ module "ecr" {
   project_name = var.project_name
 }
 
+module "vpc" {
+  source      = "./modules/vpc"
+}
+
+module "security_group" {
+  source      = "./modules/sg"
+
+  project_name = var.project_name
+  allow_ssh = true
+  vpc = module.vpc.vpc
+}
+
 module "ec2" {
   source      = "./modules/ec2"
 
@@ -39,6 +51,9 @@ module "ec2" {
     instance_type = var.config_ec2.instance_type
     spot_price    = var.config_ec2.spot_price
     ami_id = var.config_ec2.ami_id
+    security_group = {
+      ids = [module.security_group.allow_ssh.id]
+    }
   }
   ecr_repo = module.ecr.ecr_repo
   region = var.region
@@ -49,7 +64,8 @@ module "auto_scaling_group" {
   source      = "./modules/asg"
 
   project_name = var.project_name
-  process_queue_launch_configuration = module.ec2.process_queue_launch_configuration
+  process_queue_launch_template = module.ec2.process_queue_launch_template
+  subnet = module.vpc.subnets
   asg_config = {
     min_size = var.config_asg.min_instances
     max_size = var.config_asg.max_instances

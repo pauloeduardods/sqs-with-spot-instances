@@ -1,9 +1,9 @@
 resource "aws_cloudwatch_log_group" "ec2_log_group" {
-  name = "/ecs/${var.project_name}-spot-instance"
+  name = "/ecs/${var.project_name}_spot_instance"
 }
 
 resource "aws_iam_role" "ec2_role" {
-  name = "ec2_role"
+  name = "${var.project_name}_ec2_role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -21,7 +21,7 @@ resource "aws_iam_role" "ec2_role" {
 }
 
 resource "aws_iam_policy" "ec2_policy" {
-  name        = "ec2_policy"
+  name        = "${var.project_name}_ec2_policy"
   description = "Allow EC2 instances to interact with SQS and CloudWatch"
 
   policy = jsonencode({
@@ -64,20 +64,35 @@ resource "aws_iam_role_policy_attachment" "attach_ec2_policy" {
 }
 
 resource "aws_iam_instance_profile" "ec2_instance_profile" {
-  name = "ec2_instance_profile"
+  name = "${var.project_name}_ec2_instance_profile"
   role = aws_iam_role.ec2_role.name
 }
 
-resource "aws_launch_configuration" "process_queue_launch_configuration" {
-  name          = "${var.project_name}_spot_instance_config"
-  image_id =    var.ec2_config.ami_id
+resource "aws_launch_template" "process_queue_launch_template" {
+  name          = "${var.project_name}_spot_instance_lt"
+  image_id      = var.ec2_config.ami_id
   instance_type = var.ec2_config.instance_type
-  spot_price    = var.ec2_config.spot_price
-  iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.name
+  vpc_security_group_ids = var.ec2_config.security_group.ids
 
-  user_data = base64encode(
-    <<-EOF
-     $(aws ecr get-login --no-include-email --region ${var.region})
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ec2_instance_profile.name
+  }
+
+  instance_market_options {
+    market_type = "spot"
+    spot_options {
+      max_price = var.ec2_config.spot_price
+    }
+  }
+
+
+  metadata_options {
+    http_tokens = "required"
+  }
+
+  user_data = base64encode(<<-EOF
+    service docker start
+    $(aws ecr get-login --no-include-email --region ${var.region})
     docker pull ${var.ecr_repo.repository_url}:latest
     docker run -d \
       --log-driver=awslogs \
@@ -86,7 +101,19 @@ resource "aws_launch_configuration" "process_queue_launch_configuration" {
       ${var.ecr_repo.repository_url}:latest
     EOF
   )
-  # lifecycle {
-  #   create_before_destroy = true
-  # }
+
+  tags = {
+    Name = "SpotInstanceQueue_${var.project_name}"
+    CreatedBy = "Terraform"
+  }
 }
+
+
+#  $(aws ecr get-login --no-include-email --region us-east-1)
+#  sudo service docker start
+# docker pull 722354704330.dkr.ecr.us-east-1.amazonaws.com/dev_process_queue-ecr-repo:latest
+# docker run -d \
+#   --log-driver=awslogs \
+#   --log-opt awslogs-region=us-east-1 \
+#   --log-opt awslogs-group=/ecs/dev_process_queue-spot-instance \
+#   722354704330.dkr.ecr.us-east-1.amazonaws.com/dev_process_queue-ecr-repo:latest

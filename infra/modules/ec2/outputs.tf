@@ -1,6 +1,6 @@
-output "process_queue_launch_configuration" {
+output "process_queue_launch_template" {
   value = {
-    name         = aws_launch_configuration.process_queue_launch_configuration.name
-    id          = aws_launch_configuration.process_queue_launch_configuration.id
+    name         = aws_launch_template.process_queue_launch_template.name
+    id          = aws_launch_template.process_queue_launch_template.id
   }
 }

@@ -13,6 +13,9 @@ variable "ec2_config" {
     instance_type = string
     spot_price    = number
     ami_id        = string
+    security_group = object({
+      ids = list(string)
+    })
   })
 }
 
@@ -28,7 +31,6 @@ variable "sqs_queue" {
   type        = object({
     arn = string
   })
-  
 }
 
 # variable "ami_id" {
