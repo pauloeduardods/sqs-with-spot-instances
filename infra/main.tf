@@ -52,7 +52,7 @@ module "ec2" {
     spot_price    = var.config_ec2.spot_price
     ami_id = var.config_ec2.ami_id
     security_group = {
-      ids = [module.security_group.allow_ssh.id]
+      ids = [module.security_group.allow_ssh.id, module.security_group.allow_internet_traffic.id]
     }
   }
   ecr_repo = module.ecr.ecr_repo

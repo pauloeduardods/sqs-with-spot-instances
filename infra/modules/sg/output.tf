@@ -4,3 +4,11 @@ output "allow_ssh" {
     name = aws_security_group.allow_ssh.name
   }
 }
+
+output "allow_internet_traffic" {
+  value = {
+    id = aws_security_group.allow_internet_traffic.id
+    name = aws_security_group.allow_internet_traffic.name
+  }
+  
+}

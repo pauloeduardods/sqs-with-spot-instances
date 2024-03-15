@@ -91,7 +91,8 @@ resource "aws_launch_template" "process_queue_launch_template" {
   }
 
   user_data = base64encode(<<-EOF
-    service docker start
+    #!/bin/bash
+    sudo service docker start
     $(aws ecr get-login --no-include-email --region ${var.region})
     docker pull ${var.ecr_repo.repository_url}:latest
     docker run -d \
@@ -107,13 +108,3 @@ resource "aws_launch_template" "process_queue_launch_template" {
     CreatedBy = "Terraform"
   }
 }
-
-
-#  $(aws ecr get-login --no-include-email --region us-east-1)
-#  sudo service docker start
-# docker pull 722354704330.dkr.ecr.us-east-1.amazonaws.com/dev_process_queue-ecr-repo:latest
-# docker run -d \
-#   --log-driver=awslogs \
-#   --log-opt awslogs-region=us-east-1 \
-#   --log-opt awslogs-group=/ecs/dev_process_queue-spot-instance \
-#   722354704330.dkr.ecr.us-east-1.amazonaws.com/dev_process_queue-ecr-repo:latest
