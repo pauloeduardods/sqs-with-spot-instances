@@ -30,7 +30,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	s := sqs.NewSQS(log, awsCfg)
+	s := sqs.NewSQS(log, awsCfg, env.SqsQueueUrl, nil, env.MaxWorkers)
 
 	go s.StartConsumer(ctx)
+
+	<-ctx.Done()
+	log.Warning("Interrupt signal received, initiating graceful shutdown")
+	log.Info("Application exited gracefully")
 }

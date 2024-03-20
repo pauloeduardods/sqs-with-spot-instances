@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -12,6 +13,7 @@ import (
 type Environment struct {
 	Region      string
 	SqsQueueUrl string
+	MaxWorkers  int
 }
 
 func NewEnvironment() (*Environment, error) {
@@ -25,9 +27,19 @@ func NewEnvironment() (*Environment, error) {
 		return nil, fmt.Errorf("SQS_QUEUE_URL environment variable not set")
 	}
 
+	maxWorkers := os.Getenv("MAX_WORKERS")
+	maxWorkersInt, err := strconv.Atoi(maxWorkers)
+	if err != nil || maxWorkers == "" {
+		return nil, fmt.Errorf("MAX_WORKERS environment variable not set")
+	}
+	if maxWorkersInt < 1 {
+		return nil, fmt.Errorf("MAX_WORKERS must be greater than 0")
+	}
+
 	return &Environment{
 		Region:      region,
 		SqsQueueUrl: sqsQueueUrl,
+		MaxWorkers:  maxWorkersInt,
 	}, nil
 }
 
