@@ -30,7 +30,13 @@ variable "sqs_queue" {
   description = "The SQS queue"
   type        = object({
     arn = string
+    url = string
   })
+}
+
+variable "max_workers" {
+  description = "The maximum number of workers to run"
+  type        = number
 }
 
 # variable "ami_id" {

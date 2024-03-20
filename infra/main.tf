@@ -58,6 +58,7 @@ module "ec2" {
   ecr_repo = module.ecr.ecr_repo
   region = var.region
   sqs_queue = module.sqs_queue.sqs_queue
+  max_workers = var.max_workers
 }
 
 module "auto_scaling_group" {

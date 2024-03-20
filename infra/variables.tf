@@ -32,3 +32,9 @@ variable "config_ec2" {
     ami_id      = string
   })
 }
+
+variable "max_workers" {
+  description = "The maximum number of workers to run"
+  type        = number
+  default     = 3
+}

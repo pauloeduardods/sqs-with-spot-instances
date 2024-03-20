@@ -99,6 +99,9 @@ resource "aws_launch_template" "process_queue_launch_template" {
       --log-driver=awslogs \
       --log-opt awslogs-region=${var.region} \
       --log-opt awslogs-group=${aws_cloudwatch_log_group.ec2_log_group.name} \
+      -e REGION=${var.region} \
+      -e SQS_QUEUE_URL=${var.sqs_queue.url} \
+      -e MAX_WORKERS=${var.max_workers} \
       ${var.ecr_repo.repository_url}:latest
     EOF
   )

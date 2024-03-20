@@ -8,10 +8,10 @@ resource "aws_sqs_queue" "sqs_queue_dlq" {
 resource "aws_sqs_queue" "sqs_queue" {
   name                       = "${var.project_name}.fifo"
   fifo_queue                 = true
-  visibility_timeout_seconds = 90
-  message_retention_seconds  = 864000
+  visibility_timeout_seconds = 60 * 20
+  message_retention_seconds  = 60 * 60 * 24 * 10
   receive_wait_time_seconds  = 20
-  content_based_deduplication = false
+  content_based_deduplication = true
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.sqs_queue_dlq.arn
     maxReceiveCount     = 2
