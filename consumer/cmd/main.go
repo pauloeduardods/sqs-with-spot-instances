@@ -30,7 +30,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	s := sqs.NewSQS(log, awsCfg, env.SqsQueueUrl, nil, env.MaxWorkers)
+	handler := sqs.NewMapper(log)
+
+	s := sqs.NewSQS(log, awsCfg, env.SqsQueueUrl, handler.HandleProcess, env.MaxWorkers)
 
 	go s.StartConsumer(ctx)
 
