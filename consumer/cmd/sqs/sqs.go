@@ -35,6 +35,7 @@ func (s *SQS) StartConsumer(ctx context.Context) {
 	s.logger.Info("Starting consumer with maxWorkers: %d", s.maxWorkers)
 	var wg sync.WaitGroup
 	workers := make(chan struct{}, s.maxWorkers)
+	defer close(workers)
 
 	for {
 		if err := s.consumeBatch(ctx, &wg, workers); err != nil {
@@ -56,7 +57,11 @@ func (s *SQS) consumeBatch(ctx context.Context, wg *sync.WaitGroup, workers chan
 }
 
 func (s *SQS) fetchAndProcessMessages(ctx context.Context, wg *sync.WaitGroup, workers chan struct{}) error {
-	messages, err := s.fetchMessages(ctx)
+	numberOfMessagesToFetch := s.maxWorkers - len(workers)
+	if numberOfMessagesToFetch <= 0 {
+		return nil
+	}
+	messages, err := s.fetchMessages(ctx, numberOfMessagesToFetch)
 	if err != nil {
 		return err
 	}
@@ -68,10 +73,10 @@ func (s *SQS) fetchAndProcessMessages(ctx context.Context, wg *sync.WaitGroup, w
 	return nil
 }
 
-func (s *SQS) fetchMessages(ctx context.Context) ([]sqsTypes.Message, error) {
+func (s *SQS) fetchMessages(ctx context.Context, maxNumberOfMessages int) ([]sqsTypes.Message, error) {
 	resp, err := s.client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
 		QueueUrl:            &s.queueUrl,
-		MaxNumberOfMessages: int32(s.maxWorkers),
+		MaxNumberOfMessages: int32(maxNumberOfMessages),
 		WaitTimeSeconds:     20,
 	})
 	if err != nil {
