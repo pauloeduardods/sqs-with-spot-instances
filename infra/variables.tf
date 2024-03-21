@@ -29,7 +29,6 @@ variable "config_ec2" {
   type = object({
     instance_type = string
     spot_price    = number
-    ami_id      = string
   })
 }
 

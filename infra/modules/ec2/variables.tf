@@ -12,17 +12,9 @@ variable "ec2_config" {
   type        = object({
     instance_type = string
     spot_price    = number
-    ami_id        = string
     security_group = object({
       ids = list(string)
     })
-  })
-}
-
-variable "ecr_repo" {
-  description = "The ECR repository"
-  type        = object({
-    repository_url = string
   })
 }
 
@@ -37,6 +29,13 @@ variable "sqs_queue" {
 variable "max_workers" {
   description = "The maximum number of workers to run"
   type        = number
+}
+
+variable "ecs_cluster" {
+  description = "The ECS cluster"
+  type        = object({
+    name = string
+  })
 }
 
 # variable "ami_id" {

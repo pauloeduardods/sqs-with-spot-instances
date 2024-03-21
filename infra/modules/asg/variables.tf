@@ -25,3 +25,10 @@ variable "subnet" {
     ids = list(string)
   })
 }
+
+variable "ecs_cluster" {
+  description = "The ECS cluster"
+  type        = object({
+    name = string
+  })
+}

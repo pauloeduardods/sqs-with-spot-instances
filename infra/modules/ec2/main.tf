@@ -1,81 +1,148 @@
-resource "aws_cloudwatch_log_group" "ec2_log_group" {
-  name = "/ecs/${var.project_name}_spot_instance"
+data "aws_ami" "ecs_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-ecs-hvm-2.0.*-x86_64-ebs"]
+  }
 }
 
-resource "aws_iam_role" "ec2_role" {
-  name = "${var.project_name}_ec2_role"
-
+resource "aws_iam_role" "ecsInstanceRole" {
+  name               = "ecsInstanceRole-${var.project_name}"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version = "2008-10-17",
     Statement = [
       {
-        Action = "sts:AssumeRole"
+        Sid       = "",
+        Effect    = "Allow",
         Principal = {
           Service = "ec2.amazonaws.com"
-        }
-        Effect = "Allow"
-        Sid = ""
-      },
-    ]
-  })
-}
-
-resource "aws_iam_policy" "ec2_policy" {
-  name        = "${var.project_name}_ec2_policy"
-  description = "Allow EC2 instances to interact with SQS and CloudWatch"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        Resource = "arn:aws:logs:*:*:*",
-        Effect   = "Allow"
-      },
-      {
-        Action = [
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "ecr:GetAuthorizationToken"
-        ],
-        Resource = "*"
-        Effect = "Allow",
-      },
-      {
-        Action = [
-          "sqs:SendMessage",
-          "sqs:ReceiveMessage",
-          "sqs:DeleteMessage",
-          "sqs:GetQueueAttributes"
-        ],
-        Resource = var.sqs_queue.arn,
-        Effect   = "Allow"
+        },
+        Action    = "sts:AssumeRole"
       }
     ]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "attach_ec2_policy" {
-  role       = aws_iam_role.ec2_role.name
-  policy_arn = aws_iam_policy.ec2_policy.arn
+resource "aws_iam_role_policy" "ecsInstanceRolePolicy" {
+  name   = "ecsInstanceRolePolicy-${var.project_name}"
+  role   = aws_iam_role.ecsInstanceRole.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = [
+          "ecs:CreateCluster",
+          "ecs:DeregisterContainerInstance",
+          "ecs:DiscoverPollEndpoint",
+          "ecs:Poll",
+          "ecs:RegisterContainerInstance",
+          "ecs:StartTelemetrySession",
+          "ecs:Submit*",
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
 }
 
-resource "aws_iam_instance_profile" "ec2_instance_profile" {
-  name = "${var.project_name}_ec2_instance_profile"
-  role = aws_iam_role.ec2_role.name
+resource "aws_iam_role" "ecsServiceRole" {
+  name               = "ecsServiceRole-${var.project_name}"
+  assume_role_policy = jsonencode({
+    Version = "2008-10-17",
+    Statement = [
+      {
+        Effect    = "Allow",
+        Principal = {
+          Service = "ecs.amazonaws.com"
+        },
+        Action    = "sts:AssumeRole"
+      }
+    ]
+  })
 }
+resource "aws_iam_role_policy" "ecsServiceRolePolicy" {
+  name   = "ecsServiceRolePolicy-${var.project_name}"
+  role   = aws_iam_role.ecsServiceRole.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = [
+          "ec2:AuthorizeSecurityGroupIngress",
+          "ec2:Describe*",
+          "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+          "elasticloadbalancing:DeregisterTargets",
+          "elasticloadbalancing:Describe*",
+          "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+          "elasticloadbalancing:RegisterTargets"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "ecsInstanceProfile" {
+  name = "ecsInstanceProfile-${var.project_name}"
+  role = aws_iam_role.ecsInstanceRole.name
+}
+
+# resource "aws_iam_policy" "ec2_policy" { 
+#   name        = "${var.project_name}_ec2_policy"
+#   description = "Allow EC2 instances to interact with SQS and CloudWatch"
+
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = [
+#           "logs:CreateLogStream",
+#           "logs:PutLogEvents"
+#         ],
+#         Resource = "arn:aws:logs:*:*:*",
+#         Effect   = "Allow"
+#       },
+#       {
+#         Action = [
+#           "ecr:GetDownloadUrlForLayer",
+#           "ecr:BatchGetImage",
+#           "ecr:GetAuthorizationToken"
+#         ],
+#         Resource = "*"
+#         Effect = "Allow",
+#       },
+#       {
+#         Action = [
+#           "sqs:SendMessage",
+#           "sqs:ReceiveMessage",
+#           "sqs:DeleteMessage",
+#           "sqs:GetQueueAttributes"
+#         ],
+#         Resource = var.sqs_queue.arn,
+#         Effect   = "Allow"
+#       }
+#     ]
+#   })
+# }
 
 resource "aws_launch_template" "process_queue_launch_template" {
   name          = "${var.project_name}_spot_instance_lt"
-  image_id      = var.ec2_config.ami_id
+  image_id      = data.aws_ami.ecs_ami.id
   instance_type = var.ec2_config.instance_type
   vpc_security_group_ids = var.ec2_config.security_group.ids
 
   iam_instance_profile {
-    name = aws_iam_instance_profile.ec2_instance_profile.name
+    name = aws_iam_instance_profile.ecsInstanceProfile.id
   }
 
   instance_market_options {
@@ -90,19 +157,13 @@ resource "aws_launch_template" "process_queue_launch_template" {
     http_tokens = "required"
   }
 
+  monitoring {
+    enabled = true
+  }
+
   user_data = base64encode(<<-EOF
     #!/bin/bash
-    sudo service docker start
-    $(aws ecr get-login --no-include-email --region ${var.region})
-    docker pull ${var.ecr_repo.repository_url}:latest
-    docker run -d \
-      --log-driver=awslogs \
-      --log-opt awslogs-region=${var.region} \
-      --log-opt awslogs-group=${aws_cloudwatch_log_group.ec2_log_group.name} \
-      -e REGION=${var.region} \
-      -e SQS_QUEUE_URL=${var.sqs_queue.url} \
-      -e MAX_WORKERS=${var.max_workers} \
-      ${var.ecr_repo.repository_url}:latest
+    echo ECS_CLUSTER=${var.ecs_cluster.name} >> /etc/ecs/ecs.config
     EOF
   )
 
