@@ -1,3 +1,11 @@
+resource "aws_cloudwatch_log_group" "ecs_log_group" {
+  name = "/ecs/${var.project_name}"
+  tags = {
+    Name      = "ECSLogGroup_${var.project_name}"
+    CreatedBy = "Terraform"
+  }
+}
+
 resource "aws_ecs_cluster" "ecs_cluster" {
   name = "${var.project_name}_ecs_cluster"
   tags = {
@@ -33,9 +41,10 @@ resource "aws_iam_policy" "app_ecs_policy" {
       {
         Action = [
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "logs:CreateLogGroup"
         ],
-        Resource = "arn:aws:logs:*:*:*",
+        Resource = "*",
         Effect   = "Allow"
       },
       {
@@ -91,7 +100,7 @@ resource "aws_ecs_task_definition" "ecs_app_task" {
       logConfiguration = {
         logDriver = "awslogs",
         options = {
-          awslogs-group         = "/ecs/${var.project_name}",
+          awslogs-group         = aws_cloudwatch_log_group.ecs_log_group.name,
           awslogs-region        = var.region,
           awslogs-stream-prefix = "ecs"
         }

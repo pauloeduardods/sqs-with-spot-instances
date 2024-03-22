@@ -56,6 +56,7 @@ module "ecs" {
   }
   ecr_repo = module.ecr.ecr_repo
   sqs_queue = module.sqs_queue.sqs_queue
+  region = var.region
 }
 
 module "ec2" {
