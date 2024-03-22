@@ -97,49 +97,11 @@ resource "aws_iam_instance_profile" "ecsInstanceProfile" {
   role = aws_iam_role.ecsInstanceRole.name
 }
 
-# resource "aws_iam_policy" "ec2_policy" { 
-#   name        = "${var.project_name}_ec2_policy"
-#   description = "Allow EC2 instances to interact with SQS and CloudWatch"
-
-#   policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Action = [
-#           "logs:CreateLogStream",
-#           "logs:PutLogEvents"
-#         ],
-#         Resource = "arn:aws:logs:*:*:*",
-#         Effect   = "Allow"
-#       },
-#       {
-#         Action = [
-#           "ecr:GetDownloadUrlForLayer",
-#           "ecr:BatchGetImage",
-#           "ecr:GetAuthorizationToken"
-#         ],
-#         Resource = "*"
-#         Effect = "Allow",
-#       },
-#       {
-#         Action = [
-#           "sqs:SendMessage",
-#           "sqs:ReceiveMessage",
-#           "sqs:DeleteMessage",
-#           "sqs:GetQueueAttributes"
-#         ],
-#         Resource = var.sqs_queue.arn,
-#         Effect   = "Allow"
-#       }
-#     ]
-#   })
-# }
-
 resource "aws_launch_template" "process_queue_launch_template" {
   name          = "${var.project_name}_spot_instance_lt"
   image_id      = data.aws_ami.ecs_ami.id
   instance_type = var.ec2_config.instance_type
-  vpc_security_group_ids = var.ec2_config.security_group.ids
+  # vpc_security_group_ids = var.ec2_config.security_group.ids ### TODO: se isso der bom remover o sg var
 
   iam_instance_profile {
     name = aws_iam_instance_profile.ecsInstanceProfile.id

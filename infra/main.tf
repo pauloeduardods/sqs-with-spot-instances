@@ -47,6 +47,15 @@ module "ecs" {
   source      = "./modules/ecs"
 
   project_name = var.project_name
+  security_group = {
+    ids = [module.security_group.allow_ssh.id, module.security_group.allow_internet_traffic.id]
+  }
+  subnet = module.vpc.subnets
+  asg_config = {
+    min_size = var.config_asg.min_instances
+  }
+  ecr_repo = module.ecr.ecr_repo
+  sqs_queue = module.sqs_queue.sqs_queue
 }
 
 module "ec2" {
