@@ -11,7 +11,7 @@ resource "aws_ecr_repository" "ecr_repo" {
   }
 
   tags = {
-    Name        = "SpotInstanceQueue_${var.project_name}"
+    Name        = "SpotFargateQueue_${var.project_name}"
     CreatedBy   = "Terraform"
   }
 }

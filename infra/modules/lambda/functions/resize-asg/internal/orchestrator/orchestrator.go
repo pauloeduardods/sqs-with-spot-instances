@@ -34,8 +34,8 @@ func NewOrchestrator(conf *config.AWSConfig) (*Orchestrator, error) {
 	return &Orchestrator{
 		sqsClient:        sqsClient,
 		asgClient:        asgClient,
-		minInstances:     envs.MinInstances,
-		maxInstances:     envs.MaxInstances,
+		minInstances:     envs.MinContainers,
+		maxInstances:     envs.MaxContainers,
 		messageThreshold: envs.MessageThreshold,
 	}, nil
 }

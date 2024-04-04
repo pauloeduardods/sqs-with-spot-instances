@@ -14,7 +14,7 @@ resource "aws_security_group" "allow_ssh" {
   }
 
   tags = {
-    Name = "SpotInstanceQueue_${var.project_name}"
+    Name = "SpotFargateQueue_${var.project_name}"
     CreatedBy = "Terraform"
   }
 }
@@ -32,7 +32,7 @@ resource "aws_security_group" "allow_internet_traffic" {
   }
 
   tags = {
-    Name = "SpotInstanceQueue_${var.project_name}"
+    Name = "SpotFargateQueue_${var.project_name}"
     CreatedBy = "Terraform"
   }
 }

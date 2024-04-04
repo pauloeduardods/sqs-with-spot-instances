@@ -17,7 +17,7 @@ resource "aws_sqs_queue" "sqs_queue" {
     maxReceiveCount     = 2
   })
   tags = {
-    Name = "SpotInstanceQueue_${var.project_name}"
+    Name = "SpotFargateQueue_${var.project_name}"
     CreatedBy = "Terraform"
   }
 }

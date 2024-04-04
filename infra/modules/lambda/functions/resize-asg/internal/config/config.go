@@ -18,8 +18,8 @@ type Environment struct {
 	Region           string
 	SqsQueueUrl      string
 	ASGName          string
-	MinInstances     int
-	MaxInstances     int
+	MinContainers    int
+	MaxContainers    int
 	MessageThreshold int
 }
 
@@ -42,16 +42,16 @@ func NewEnvironment() *Environment {
 		panic("ASG_NAME environment variable not set")
 	}
 
-	minInstances, err := strconv.Atoi(os.Getenv("MIN_INSTANCES"))
+	minContainers, err := strconv.Atoi(os.Getenv("MIN_CONTAINERS"))
 	if err != nil {
-		logger.Error("Error converting MIN_INSTANCES to int: %v", err)
-		panic(fmt.Errorf("Error converting MIN_INSTANCES to int: %w", err))
+		logger.Error("Error converting MIN_CONTAINERS to int: %v", err)
+		panic(fmt.Errorf("Error converting MIN_CONTAINERS to int: %w", err))
 	}
 
-	maxInstances, err := strconv.Atoi(os.Getenv("MAX_INSTANCES"))
+	maxContainers, err := strconv.Atoi(os.Getenv("MAX_CONTAINERS"))
 	if err != nil {
-		logger.Error("Error converting MAX_INSTANCES to int: %v", err)
-		panic(fmt.Errorf("Error converting MAX_INSTANCES to int: %w", err))
+		logger.Error("Error converting MAX_CONTAINERS to int: %v", err)
+		panic(fmt.Errorf("Error converting MAX_CONTAINERS to int: %w", err))
 	}
 
 	messageThreshold, err := strconv.Atoi(os.Getenv("MESSAGE_THRESHOLD"))
@@ -64,8 +64,8 @@ func NewEnvironment() *Environment {
 		Region:           region,
 		SqsQueueUrl:      sqsQueueUrl,
 		ASGName:          asgName,
-		MinInstances:     minInstances,
-		MaxInstances:     maxInstances,
+		MinContainers:    minContainers,
+		MaxContainers:    maxContainers,
 		MessageThreshold: messageThreshold,
 	}
 }

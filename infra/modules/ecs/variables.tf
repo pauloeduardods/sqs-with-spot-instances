@@ -3,13 +3,6 @@ variable "project_name" {
   type        = string
 }
 
-variable "asg_config" {
-  description = "Auto Scaling Group configuration"
-  type        = object({
-    min_size         = number
-  })
-}
-
 variable "subnet" {
   description = "The subnet configuration"
   type        = object({
@@ -35,6 +28,7 @@ variable "sqs_queue" {
   description = "The SQS queue"
   type        = object({
     arn = string
+    url = string
   })
 }
 

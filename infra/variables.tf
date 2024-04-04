@@ -10,26 +10,18 @@ variable "project_name" {
   default     = "dev-process-queue"
 }
 
-variable "config_asg" {
+variable "config_containers" {
   description = "Lambda function configuration"
   type = object({
-    min_instances      = number
-    max_instances      = number
+    min_containers      = number
+    max_containers      = number
     message_threshold  = number 
   })
   default = {
-    min_instances      = 0
-    max_instances      = 3
+    min_containers      = 0
+    max_containers      = 3
     message_threshold  = 50
   }
-}
-
-variable "config_ec2" {
-  description = "EC2 instance configuration"
-  type = object({
-    instance_type = string
-    spot_price    = number
-  })
 }
 
 variable "max_workers" {

@@ -16,19 +16,11 @@ variable "sqs" {
   })
 }
 
-variable "asg" {
-  description = "ASG"
-  type        = object({
-    arn = string
-    name = string
-  })
-}
-
 variable "config" {
   description = "Config"
   type        = object({
-    min_instances = number
-    max_instances = number
+    min_containers = number
+    max_containers = number
     message_threshold = number
   })
 }

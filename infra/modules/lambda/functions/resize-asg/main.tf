@@ -11,6 +11,30 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
+resource "aws_cloudwatch_event_rule" "lambda_resize_asg_rule" {
+  name                = "${var.project_name}_lambda_resize_asg"
+  description         = "Rule to call lambda to resize ASG"
+  schedule_expression = "rate(5 minutes)"
+  tags = {
+    Name = "SpotFargateQueue_${var.project_name}"
+    CreatedBy = "Terraform"
+  }
+}
+
+resource "aws_cloudwatch_event_target" "lambda_resize_asg_target" {
+  rule      = aws_cloudwatch_event_rule.lambda_resize_asg_rule.name
+  target_id = "CallLambdaResizeASG"
+  arn       = aws_lambda_function.lambda_function.arn
+}
+
+resource "aws_lambda_permission" "allow_cloudwatch_to_call_lambda" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda_function.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.lambda_resize_asg_rule.arn 
+}
+
 resource "aws_iam_role" "iam_for_lambda_resize_asg" {
   name               = "${var.project_name}_iam_for_lambda_resize_asg"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
@@ -76,14 +100,14 @@ resource "aws_lambda_function" "lambda_function" {
       REGION = var.region,
       SQS_QUEUE_URL = var.sqs.url,
       ASG_NAME = var.asg.name,
-      MIN_INSTANCES = var.config.min_instances,
-      MAX_INSTANCES = var.config.max_instances,
+      MIN_CONTAINERS = var.config.min_containers,
+      MAX_CONTAINERS = var.config.max_containers,
       MESSAGE_THRESHOLD = var.config.message_threshold,
     }
   }
 
   tags = {
-    Name = "SpotInstanceQueue_${var.project_name}"
+    Name = "SpotFargateQueue_${var.project_name}"
     CreatedBy = "Terraform"
   }
 }
