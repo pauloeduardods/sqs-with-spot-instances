@@ -3,20 +3,6 @@ variable "project_name" {
   type        = string
 }
 
-variable "subnet" {
-  description = "The subnet configuration"
-  type        = object({
-    ids = list(string)
-  })
-}
-
-variable "security_group" {
-  description = "The security group configuration"
-  type        = object({
-    ids = list(string)
-  })
-}
-
 variable "ecr_repo" {
   description = "The ECR repository"
   type        = object({

@@ -1,3 +1,32 @@
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+resource "aws_security_group" "allow_internet_traffic_sg" {
+  name   = "${var.project_name}_allow_internet_sg"
+
+  vpc_id = var.vpc.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "SpotFargateQueue_${var.project_name}"
+    CreatedBy = "Terraform"
+  }
+}
+
 resource "aws_cloudwatch_log_group" "ecs_log_group" {
   name = "/ecs/${var.project_name}"
   tags = {
@@ -163,8 +192,8 @@ resource "aws_ecs_service" "app_service" {
   }                   
 
   network_configuration {
-    subnets         = var.subnet.ids
-    security_groups = var.security_group.ids
+    subnets         = data.aws_subnets.default.ids
+    security_groups = [aws_security_group.allow_internet_traffic_sg.id]
     assign_public_ip = true
   }
 

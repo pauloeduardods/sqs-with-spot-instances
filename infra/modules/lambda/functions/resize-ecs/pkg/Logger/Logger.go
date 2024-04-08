@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"runtime"
+	"strings"
 )
 
 type Logger struct{}
@@ -29,6 +30,8 @@ func (l *Logger) logWithCallerInfo(level, format string, v ...interface{}) {
 	if !ok {
 		file = "???"
 		line = 0
+	} else {
+		file = file[strings.LastIndex(file, "/")+1:]
 	}
 	formattedMessage := fmt.Sprintf(format, v...)
 	logMsg := fmt.Sprintf("%s:%d: %s - %s\n", file, line, level, formattedMessage)

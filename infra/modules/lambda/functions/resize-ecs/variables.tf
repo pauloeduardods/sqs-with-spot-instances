@@ -28,7 +28,6 @@ variable "config" {
 variable "ecs" {
   description = "ECS"
   type        = object({
-    arn = string
     cluster = string
     name = string
   })
