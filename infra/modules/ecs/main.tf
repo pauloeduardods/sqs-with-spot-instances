@@ -154,7 +154,7 @@ resource "aws_ecs_service" "app_service" {
   name            = "${var.project_name}_service"
   cluster         = aws_ecs_cluster.ecs_cluster.id
   task_definition = aws_ecs_task_definition.ecs_app_task.arn
-  desired_count   = 1 # TODO: Change this in lambda 
+  desired_count   = var.config_containers.min_containers
 
   capacity_provider_strategy {
     capacity_provider = "FARGATE_SPOT"

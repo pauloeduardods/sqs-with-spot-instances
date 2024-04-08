@@ -36,3 +36,12 @@ variable "region" {
   description = "The region"
   type        = string
 }
+
+variable "config_containers" {
+  description = "The configuration for the containers"
+  type        = object({
+    min_containers     = number
+    max_containers     = number
+    message_threshold  = number
+  })
+}
