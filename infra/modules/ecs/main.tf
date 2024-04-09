@@ -12,7 +12,7 @@ data "aws_subnets" "default" {
 resource "aws_security_group" "allow_internet_traffic_sg" {
   name   = "${var.project_name}_allow_internet_sg"
 
-  vpc_id = var.vpc.id
+  vpc_id = data.aws_vpc.default.id
 
   egress {
     from_port   = 0

@@ -44,7 +44,7 @@ func (o *Orchestrator) calculateDesiredContainers(messages int) int {
 	if messages <= 0 {
 		return o.minContainers
 	}
-	desired := max(1, messages/o.messageThreshold) // 1 instance at least if messages > 0
+	desired := (messages / o.messageThreshold) + o.minContainers
 	if desired < o.minContainers {
 		return o.minContainers
 	}
@@ -52,13 +52,6 @@ func (o *Orchestrator) calculateDesiredContainers(messages int) int {
 		return o.maxContainers
 	}
 	return desired
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }
 
 func (o *Orchestrator) Orchestrate() error {
@@ -72,6 +65,10 @@ func (o *Orchestrator) Orchestrate() error {
 
 	desiredContainers := o.calculateDesiredContainers(totalMessages)
 	currentCapacity, err := o.ecsClient.GetDesiredCount()
+
+	if desiredContainers == 0 && totalMessages > 0 && currentCapacity != 0 { // Don't scale down to 0 if there are messages in the queue and at least one container is running
+		desiredContainers = 1
+	}
 
 	logger.Info("Desired containers: %d, Current capacity: %d", desiredContainers, currentCapacity)
 	if err != nil {
